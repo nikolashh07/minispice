@@ -1,0 +1,8 @@
+* RC low-pass filter: corner at 1/(2π R C) = 159.2 Hz
+* At the corner the output is 3 dB down with a phase of -45°.
+* expect-ac: vdb(2) at 159.155 = -3.0103 tol=0.1%
+* expect-ac: vp(2) at 159.155 = -45 tol=0.1%
+V1 1 0 DC 0 AC 1
+R1 1 2 1k
+C1 2 0 1u
+.ac dec 20 1 100k

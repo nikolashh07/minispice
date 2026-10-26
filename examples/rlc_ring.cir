@@ -1,0 +1,8 @@
+* Underdamped series RLC: rings at about 1/(2π√(LC)) = 5.03 kHz
+* Damping α = R/(2L) = 5000 /s, so it rings at √(ω0² - α²)/2π = 4.97 kHz
+* and the ringing shrinks by e^(-α t).
+V1 1 0 STEP(0 1 0)
+R1 1 2 10
+L1 2 3 1m
+C1 3 0 1u
+.tran 1u 2m

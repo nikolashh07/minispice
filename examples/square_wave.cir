@@ -1,0 +1,5 @@
+* 1 kHz square wave: only odd harmonics, sized 1, 1/3, 1/5, ...
+V1 1 0 PULSE(-1 1 0 1n 1n 0.5m 1m)
+R1 1 0 1k
+.tran 10u 5m
+.four 1k v(1)

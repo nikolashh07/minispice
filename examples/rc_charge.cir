@@ -1,0 +1,8 @@
+* RC charging: 5 V step into 1k and 1uF, time constant RC = 1 ms
+* After one time constant the capacitor reaches 1 - 1/e = 63.2 % of 5 V.
+* expect-tran: v(2) at 1m = 3.1606 tol=0.2%
+* expect-tran: v(2) at 5m = 4.9663 tol=0.2%
+V1 1 0 STEP(0 5 0)
+R1 1 2 1k
+C1 2 0 1u
+.tran 10u 5m

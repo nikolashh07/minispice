@@ -37,6 +37,8 @@ class Context:
     limits: dict = field(default_factory=dict)  # last junction voltages, for Newton voltage limiting
     limited: bool = False  # set when a part limited its voltage this iteration
     x_op: np.ndarray = None  # DC operating point that AC and noise linearize around
+    transient_op: bool = False  # the DC solve at t = 0 that starts a transient (sources use their waveforms)
+    uic: bool = False  # "use initial conditions": start a transient from .ic / ic= values instead of a DC solve
 
     def source_factor(self, comp):
         """How much of an independent source to apply: 0 when switched off, 1 normally."""

@@ -1,0 +1,8 @@
+* 10:1 ideal transformer: 120 V in, 12 V out; currents scale the opposite way
+* expect: v(2) = 12
+* expect: i(RL) = 1
+* expect: i(V1) = -0.1
+V1 1 0 120
+T1 1 0 2 0 10
+RL 2 0 12
+.op

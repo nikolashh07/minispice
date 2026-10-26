@@ -76,7 +76,7 @@ class _Source(Component):
 
     def level(self, ctx):
         """The source's value right now: the waveform during transient, the DC value otherwise."""
-        if ctx.mode == "tran" and self.waveform is not None:
+        if self.waveform is not None and (ctx.mode == "tran" or ctx.transient_op):
             value = self.waveform.value(ctx.time)
         else:
             value = self.value

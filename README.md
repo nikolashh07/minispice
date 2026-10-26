@@ -28,7 +28,25 @@ R2    resistor        5 V      5 mA     25 mW
 Sources deliver 50 mW, parts absorb 50 mW: balanced (sum of all powers = 0 W)
 ```
 
-## What it does (v0.1)
+## Time and frequency (v0.2)
+
+| RC charging | Underdamped RLC | RC low-pass Bode plot |
+|---|---|---|
+| ![RC charging](docs/images/rc_charge.png) | ![RLC ringing](docs/images/rlc_ring.png) | ![Bode plot](docs/images/rc_lowpass_bode.png) |
+
+```
+python -m minispice examples/rc_charge.cir --probe "v(2)" --plot
+python -m minispice examples/rc_lowpass.cir --probe "v(2)" --plot
+python -m minispice examples/square_wave.cir
+```
+
+- Transient analysis with backward Euler or trapezoidal integration and adaptive time steps.
+- Step, pulse, sine, piecewise-linear and exponential sources.
+- AC analysis with Bode magnitude and phase plots.
+- Fourier analysis: harmonics, THD and spectra.
+- Coupled inductors, ideal transformers and time-controlled switches.
+
+## DC analysis (v0.1)
 
 - Reads SPICE-style netlists: unit suffixes (`1k`, `4.7u`, `10meg`), comments, `.param`, `.include`, subcircuits.
 - DC operating point by modified nodal analysis (Ohm's law, KCL, KVL).

@@ -1,0 +1,10 @@
+* A switch closes at 1 ms and starts charging the capacitor through R1
+* 'uic' starts the capacitor empty. Without it, the DC solve at t = 0 would charge it
+* through the open switch's 1 GΩ, since at DC no current flows to stop that.
+* expect-tran: v(3) at 1.5m = 3.9347 tol=0.5%
+* expect-tran: v(3) at 2m = 6.3212 tol=0.5%
+V1 1 0 10
+S1 1 2 ton=1m
+R1 2 3 1k
+C1 3 0 1u
+.tran 10u 4m uic
