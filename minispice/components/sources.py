@@ -131,7 +131,7 @@ class VoltageSource(_Source):
             n1, n2 = self.nodes
             ctx.note(
                 "KVL",
-                f"{self.name} forces V{n1} - V{n2} = {format_eng(value, 'V')}. Its current is unknown, so MNA adds "
+                f"{self.name} forces V({n1}) - V({n2}) = {format_eng(value, 'V')}. Its current is unknown, so MNA adds "
                 f"I({self.name}) as an extra unknown and this equation as an extra row.",
                 [self.name],
             )

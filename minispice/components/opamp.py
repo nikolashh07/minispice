@@ -93,7 +93,7 @@ class OpAmp(Component):
             system.add(self.br, inn, -1.0)
             if ctx.explaining:
                 ctx.note("Virtual short", f"{self.name} is ideal: with negative feedback its inputs sit at the same voltage, "
-                         f"so V{self.nodes[0]} = V{self.nodes[1]}, and no current flows into the inputs.", [self.name])
+                         f"so V({self.nodes[0]}) = V({self.nodes[1]}), and no current flows into the inputs.", [self.name])
             return
         vd = 0.0 if ctx.x is None else node_voltage(ctx.x, inp) - node_voltage(ctx.x, inn)
         f0, slope = self.transfer(vd)
@@ -109,7 +109,7 @@ class OpAmp(Component):
         system.add(self.br, inn, slope)
         system.add_b(self.br, f0 - slope * vd + history)
         if ctx.explaining:
-            ctx.note("Op-amp model", f"{self.name}: Vout = {format_eng(self.value, '')} × (V{self.nodes[0]} - V{self.nodes[1]}), limited to the rails.", [self.name])
+            ctx.note("Op-amp model", f"{self.name}: Vout = {format_eng(self.value, '')} × (V({self.nodes[0]}) - V({self.nodes[1]})), limited to the rails.", [self.name])
 
     def stamp_ac(self, system, ctx):
         inp, inn, out = self.idx

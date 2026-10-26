@@ -1,0 +1,8 @@
+* Homework example: try `python -m minispice check examples/homework_example.cir`
+* The second answer below has a deliberate mistake (R3 was forgotten), to show the checker's hints.
+V1 1 0 12
+R1 1 2 6k
+R2 2 0 3k
+R3 2 0 6k
+* answer: i(R1) = 1.5m
+* answer: v(2) = 4

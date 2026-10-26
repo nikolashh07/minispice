@@ -55,7 +55,7 @@ class Resistor(Component):
             n1, n2 = self.nodes
             ctx.note(
                 "Ohm's law",
-                f"{self.name} ({format_eng(r, 'Ω')}) carries current (V{n1} - V{n2}) / {format_eng(r, 'Ω')}, "
+                f"{self.name} ({format_eng(r, 'Ω')}) carries current (V({n1}) - V({n2})) / {format_eng(r, 'Ω')}, "
                 f"so it adds a conductance of {format_eng(g, 'S')} to the KCL equations of nodes {n1} and {n2}.",
                 [self.name],
             )

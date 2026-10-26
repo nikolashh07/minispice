@@ -20,6 +20,7 @@ def build_parser():
     parser = argparse.ArgumentParser(
         prog="python -m minispice",
         description="MiniSpice circuit simulator. Example: python -m minispice examples/divider.cir --dc",
+        epilog="Also: 'python -m minispice check FILE' checks homework answers, 'python -m minispice practice' gives practice problems.",
     )
     parser.add_argument("netlist", help="circuit file (.cir)")
     parser.add_argument("--version", action="version", version=f"MiniSpice {__version__}")
@@ -47,6 +48,10 @@ def build_parser():
     options.add_argument("--method", choices=["be", "trap"], help="transient integration: backward Euler or trapezoidal (default)")
     options.add_argument("--fixed-step", action="store_true", help="transient: use a fixed time step instead of adaptive")
     options.add_argument("--step", nargs="+", metavar="ARG", help="rerun the analyses for several values: --step R1 1k 2k 5k")
+    options.add_argument("--explain", nargs="?", const="-", metavar="FILE",
+                         help="explain the DC solution step by step; FILE (.txt .md .tex .pdf) saves it instead of printing")
+    options.add_argument("--schematic", metavar="FILE", help="draw the circuit, annotated with DC results, to FILE (.svg or .png)")
+    options.add_argument("--plain-schematic", action="store_true", help="with --schematic: draw without results")
     options.add_argument("--seed", type=int, default=1, help="Monte Carlo random seed (default 1)")
     options.add_argument("--gaussian", action="store_true", help="Monte Carlo: normal distribution (tol = 3 sigma) instead of uniform")
     return parser
@@ -367,6 +372,25 @@ def run_noise(circuit, args):
         print(f"\nPlot saved to {plot_noise(result.freqs, result.output_density, f'{args.plot}/noise.png')}")
 
 
+def run_explain(circuit, args):
+    from .explain import explain_dc
+
+    walkthrough, _ = explain_dc(circuit)
+    if args.explain == "-":
+        print()
+        print(walkthrough.to_text())
+    else:
+        print(f"Explanation saved to {walkthrough.save(args.explain)}")
+
+
+def run_schematic(circuit, args):
+    from .schematic import draw_schematic
+
+    solution = None if args.plain_schematic else operating_point(circuit)
+    draw_schematic(circuit, args.schematic, solution)
+    print(f"Schematic saved to {args.schematic}")
+
+
 # (option name, handler). Order is the order results are printed.
 HANDLERS = [
     ("op", run_op),
@@ -382,6 +406,8 @@ HANDLERS = [
     ("worst_case", run_worst_case),
     ("sens", run_sens),
     ("noise", run_noise),
+    ("explain", run_explain),
+    ("schematic", run_schematic),
 ]
 
 # Netlist dot-commands that map to a handler, for when no analysis option is given.
@@ -406,11 +432,84 @@ def _step_plan(circuit, args):
     return None
 
 
+# ---- subcommands ---------------------------------------------------------------------------------
+
+
+def check_main(argv):
+    """python -m minispice check homework.cir"""
+    from .homework import check_answers, read_answers
+
+    parser = argparse.ArgumentParser(prog="python -m minispice check", description="Check your answers to a circuit problem.")
+    parser.add_argument("netlist", help="circuit file with '* answer: v(2) = 5' lines")
+    parser.add_argument("--tol", default="2%", help="how close counts as right (default 2%%)")
+    args = parser.parse_args(argv)
+    from .units import parse_value
+
+    with open(args.netlist, encoding="utf-8") as handle:
+        text = handle.read()
+    report = check_answers(load(args.netlist), read_answers(text), parse_value(args.tol))
+    print(report.to_text())
+    return 0 if report.all_correct else 3
+
+
+def practice_main(argv):
+    """python -m minispice practice [--level N] [--seed S]: solve random circuits by hand."""
+    from .homework import check_answers, generate_problem
+    from .netlist import parse
+    from .units import parse_value
+
+    parser = argparse.ArgumentParser(prog="python -m minispice practice", description="Practice solving circuits by hand.")
+    parser.add_argument("--level", type=int, default=1, choices=[1, 2, 3, 4], help="1 divider, 2 series-parallel, 3 two sources, 4 current source")
+    parser.add_argument("--seed", type=int, help="pick a specific problem")
+    parser.add_argument("--schematic", metavar="FILE", help="also draw the circuit to FILE")
+    args = parser.parse_args(argv)
+    problem = generate_problem(args.seed, args.level)
+    circuit = parse(problem.netlist)
+    print(problem.netlist)
+    if args.schematic:
+        from .schematic import draw_schematic
+
+        draw_schematic(circuit, args.schematic)
+        print(f"(drawing saved to {args.schematic})")
+    print("Answer with units if you like: 4.5, 4.5V, 2m, 2mA. Currents use the passive sign convention.")
+    answers = []
+    for question in problem.questions:
+        while True:
+            reply = input(f"{question} = ").strip()
+            try:
+                answers.append((question, parse_value(reply)))
+                break
+            except ValueError:
+                print("  That isn't a number. Try something like 4.5 or 2m.")
+    report = check_answers(circuit, answers)
+    print()
+    print(report.to_text())
+    if not report.all_correct:
+        from .explain import explain_dc
+
+        print("\nHere is the full solution:\n")
+        print(explain_dc(circuit)[0].to_text())
+    return 0 if report.all_correct else 3
+
+
+SUBCOMMANDS = {"check": check_main, "practice": practice_main}
+
+
 def main(argv=None):
     # Windows consoles default to a code page without Ω and µ.
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
         sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    argv = sys.argv[1:] if argv is None else list(argv)
+    if argv and argv[0] in SUBCOMMANDS:
+        try:
+            return SUBCOMMANDS[argv[0]](argv[1:])
+        except FileNotFoundError as error:
+            print(f"error: can't open '{error.filename}'", file=sys.stderr)
+            return 2
+        except MiniSpiceError as error:
+            print(f"error: {error}", file=sys.stderr)
+            return 1
     args = build_parser().parse_args(argv)
     try:
         circuit = load(args.netlist)

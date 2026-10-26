@@ -28,6 +28,27 @@ R2    resistor        5 V      5 mA     25 mW
 Sources deliver 50 mW, parts absorb 50 mW: balanced (sum of all powers = 0 W)
 ```
 
+## Visual and educational (v0.5)
+
+![Explain mode stepping through a circuit](docs/images/explain.gif)
+
+| Annotated schematic | Transistor bias point |
+|---|---|
+| ![Thevenin example](docs/images/schematic_thevenin.png) | ![BJT bias](docs/images/schematic_bjt.png) |
+
+```
+python -m minispice examples/two_sources.cir --explain              # step-by-step solution
+python -m minispice examples/two_sources.cir --explain solution.pdf # or .tex, .md, .txt
+python -m minispice examples/thevenin.cir --schematic thevenin.svg  # annotated drawing
+python -m minispice check examples/homework_example.cir             # check your answers
+python -m minispice practice --level 2                              # random problems to solve
+```
+
+- Schematics drawn automatically from the netlist, with node voltages, currents, power, wires colored by voltage, and overheating parts in red.
+- Explain mode: every law the solver used, KCL at each node written out and checked, the matrix, and the power balance.
+- Homework checker: finds the first step where your answers go wrong and spots sign errors, unit slips, and forgotten or shorted parts.
+- Practice mode with random circuits at four levels.
+
 ## Pro-level analysis (v0.4)
 
 ```

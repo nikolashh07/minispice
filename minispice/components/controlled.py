@@ -68,7 +68,7 @@ class VCVS(Component):
         self._stamp(system)
         if ctx.explaining:
             n = self.nodes
-            ctx.note("Dependent source", f"{self.name} forces V{n[0]} - V{n[1]} = {self.value:g} × (V{n[2]} - V{n[3]}).", [self.name])
+            ctx.note("Dependent source", f"{self.name} forces V({n[0]}) - V({n[1]}) = {self.value:g} × (V({n[2]}) - V({n[3]})).", [self.name])
 
     def stamp_ac(self, system, ctx):
         self._stamp(system)
@@ -108,7 +108,7 @@ class VCCS(Component):
         self._stamp(system)
         if ctx.explaining:
             n = self.nodes
-            ctx.note("Dependent source", f"{self.name} pushes {format_eng(self.value, 'S')} × (V{n[2]} - V{n[3]}) from node {n[0]} to node {n[1]}.", [self.name])
+            ctx.note("Dependent source", f"{self.name} pushes {format_eng(self.value, 'S')} × (V({n[2]}) - V({n[3]})) from node {n[0]} to node {n[1]}.", [self.name])
 
     def stamp_ac(self, system, ctx):
         self._stamp(system)
@@ -199,7 +199,7 @@ class CCVS(_CurrentControlled):
     def stamp(self, system, ctx):
         self._stamp(system)
         if ctx.explaining:
-            ctx.note("Dependent source", f"{self.name} forces V{self.nodes[0]} - V{self.nodes[1]} = {format_eng(self.value, 'Ω')} × I({self.control}).", [self.name, self.control])
+            ctx.note("Dependent source", f"{self.name} forces V({self.nodes[0]}) - V({self.nodes[1]}) = {format_eng(self.value, 'Ω')} × I({self.control}).", [self.name, self.control])
 
     def stamp_ac(self, system, ctx):
         self._stamp(system)
