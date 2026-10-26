@@ -1,0 +1,14 @@
+# Virtual environment (rebuilt from requirements.txt, never committed)
+.venv/
+
+# Python build/cache files
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+
+# Editor settings
+.vscode/
+
+# Generated plots
+output/
