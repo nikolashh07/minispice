@@ -1,0 +1,246 @@
+:root {
+  --bg: #f4f5f7;
+  --panel: #ffffff;
+  --ink: #1d2330;
+  --muted: #5d6676;
+  --line: #d6dae1;
+  --accent: #1f6feb;
+  --accent-ink: #ffffff;
+  --wire: #2b3442;
+  --part: #1d2330;
+  --pin: #8a93a3;
+  --grid: #c3c8d1;
+  --select: #1f6feb;
+  --highlight: #e67e00;
+  --hot: #d42020;
+  --dot: #f0a500;
+  --danger: #c62828;
+  --chart-bg: #ffffff;
+  --chart-fg: #1d2330;
+  --chart-grid: #dde1e7;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12151b;
+    --panel: #1a1e26;
+    --ink: #e4e8ef;
+    --muted: #9aa3b2;
+    --line: #2d3340;
+    --accent: #4c8dff;
+    --wire: #c8d0dc;
+    --part: #e4e8ef;
+    --pin: #6c7584;
+    --grid: #343a46;
+    --select: #4c8dff;
+    --dot: #ffc23d;
+    --danger: #ff6b6b;
+    --chart-bg: #1a1e26;
+    --chart-fg: #e4e8ef;
+    --chart-grid: #2d3340;
+    color-scheme: dark;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+  display: grid;
+  grid-template-rows: auto minmax(320px, 1fr) auto minmax(260px, 38vh);
+  height: 100vh;
+}
+
+header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  padding: 8px 12px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+}
+
+h1 { font-size: 18px; margin: 0; letter-spacing: 0.02em; }
+h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 14px 0 6px; }
+
+#design-title {
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+  padding: 4px 6px;
+  border-radius: 4px;
+  min-width: 180px;
+}
+#design-title:hover, #design-title:focus { border-color: var(--line); }
+
+#toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.sep { width: 1px; height: 22px; background: var(--line); margin: 0 4px; }
+
+button, .button, select, input {
+  font: inherit;
+  color: var(--ink);
+}
+
+button, .button {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+  text-decoration: none;
+}
+button:hover, .button:hover { border-color: var(--accent); }
+button.active { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+button:disabled { opacity: 0.45; cursor: default; }
+
+select, input[type="text"], input:not([type]) {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 3px 6px;
+}
+
+main {
+  display: grid;
+  grid-template-columns: 112px 1fr 250px;
+  min-height: 0;
+}
+
+#palette {
+  overflow-y: auto;
+  background: var(--panel);
+  border-right: 1px solid var(--line);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.part-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 2px;
+  font-size: 11px;
+  line-height: 1.15;
+}
+.part-button svg { stroke: var(--part); }
+
+#canvas-wrap { overflow: auto; min-height: 0; }
+
+#schematic { display: block; cursor: default; }
+#schematic[data-mode="wire"], #schematic[data-mode="place"] { cursor: crosshair; }
+#schematic[data-mode="probe"] { cursor: cell; }
+
+.grid-dot { fill: var(--grid); }
+.wire { stroke: var(--wire); stroke-width: 2.4; stroke-linecap: round; }
+.wire:hover { stroke: var(--accent); stroke-width: 4; }
+.wire.selected { stroke: var(--select); stroke-width: 4; }
+.wire.preview { fill: none; stroke: var(--accent); stroke-dasharray: 5 4; }
+.junction { fill: var(--wire); }
+
+.part path, .part circle, .part line { fill: none; stroke: var(--part); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.part .fill { fill: var(--part); }
+.part .hit { fill: transparent; stroke: none; }
+.part:hover .hit { fill: rgba(31, 111, 235, 0.06); }
+.part.selected .hit { fill: rgba(31, 111, 235, 0.12); stroke: var(--select); stroke-dasharray: 4 3; }
+.part.highlight path, .part.highlight circle { stroke: var(--highlight); stroke-width: 3; }
+.part.highlight .fill { fill: var(--highlight); }
+.part.hot path, .part.hot circle { stroke: var(--hot); }
+#schematic .part { cursor: move; }
+
+.pin { fill: var(--pin); }
+.label { fill: var(--muted); font-size: 12px; pointer-events: none; }
+.voltage { fill: var(--accent); font-size: 11px; font-weight: 600; pointer-events: none; }
+.dot { fill: var(--dot); pointer-events: none; }
+.probe { fill: none; stroke-width: 2.5; pointer-events: none; }
+.probe-label { font-size: 10px; font-weight: 700; pointer-events: none; }
+
+#inspector {
+  background: var(--panel);
+  border-left: 1px solid var(--line);
+  padding: 0 12px 12px;
+  overflow-y: auto;
+}
+#inspector label { display: block; margin: 8px 0; color: var(--muted); font-size: 12px; }
+#inspector label input, #inspector label select { display: block; width: 100%; margin-top: 3px; }
+.readout { width: 100%; border-collapse: collapse; margin-top: 8px; }
+.readout th { text-align: left; color: var(--muted); font-weight: normal; padding: 3px 0; }
+.readout td { text-align: right; font-variant-numeric: tabular-nums; }
+.hint { color: var(--muted); font-size: 12px; }
+.danger { color: var(--danger); font-weight: 600; }
+
+.meter { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px; }
+#meter-display {
+  font: 600 26px/1.2 ui-monospace, "Cascadia Mono", Consolas, monospace;
+  text-align: right;
+  background: #c9d6c3;
+  color: #13210f;
+  border-radius: 4px;
+  padding: 6px 10px;
+  margin-bottom: 6px;
+}
+
+#status {
+  padding: 5px 12px;
+  font-size: 13px;
+  background: var(--panel);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  white-space: pre-wrap;
+  max-height: 5.5em;
+  overflow-y: auto;
+}
+#status.error { color: var(--danger); }
+
+#panel { display: flex; flex-direction: column; min-height: 0; background: var(--panel); }
+#tabs { display: flex; gap: 2px; padding: 6px 8px 0; border-bottom: 1px solid var(--line); overflow-x: auto; }
+#tabs button { border-radius: 6px 6px 0 0; border-bottom: none; white-space: nowrap; }
+.tab-page { flex: 1; display: flex; flex-direction: column; min-height: 0; padding: 8px 12px; }
+.tab-page[hidden] { display: none; }
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 8px; }
+.readout-text { color: var(--muted); font-size: 13px; }
+
+canvas.screen { flex: 1; width: 100%; min-height: 160px; border-radius: 8px; }
+.charts { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; min-height: 0; }
+canvas.chart { width: 100%; height: 100%; min-height: 150px; border: 1px solid var(--line); border-radius: 6px; }
+canvas.chart.wide { flex: 1; }
+
+#explain-step { overflow-y: auto; max-width: 900px; }
+#explain-step h3 { margin: 4px 0; }
+#explain-step .law { color: var(--highlight); font-weight: 600; margin-top: 0; }
+#explain-step pre { background: var(--bg); padding: 6px 10px; border-radius: 6px; overflow-x: auto; }
+
+.netlist-split { flex: 1; display: grid; grid-template-columns: minmax(260px, 1fr) 1fr; gap: 12px; min-height: 0; }
+#netlist-text {
+  width: 100%;
+  height: 100%;
+  font: 13px/1.4 ui-monospace, Consolas, monospace;
+  background: var(--bg);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 8px;
+  resize: none;
+}
+#netlist-results { overflow-y: auto; }
+table.results { border-collapse: collapse; margin-bottom: 12px; }
+table.results th, table.results td { padding: 3px 10px; border-bottom: 1px solid var(--line); text-align: left; }
+
+@media (max-width: 760px) {
+  body { grid-template-rows: auto minmax(300px, 60vh) auto auto; height: auto; }
+  main { grid-template-columns: 76px 1fr; }
+  #inspector { grid-column: 1 / -1; border-left: none; border-top: 1px solid var(--line); }
+  .part-button span { display: none; }
+  .charts, .netlist-split { grid-template-columns: 1fr; }
+  #panel { min-height: 420px; }
+}

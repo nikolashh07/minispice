@@ -28,6 +28,22 @@ R2    resistor        5 V      5 mA     25 mW
 Sources deliver 50 mW, parts absorb 50 mW: balanced (sum of all powers = 0 W)
 ```
 
+## In the browser (v1.0)
+
+The whole simulator also runs in a web page: the same Python engine, loaded with [Pyodide](https://pyodide.org), so no server is needed and it can be hosted free on GitHub Pages.
+
+```
+python web/serve.py        # then open http://localhost:8000
+```
+
+- Drag-and-drop schematic editor: parts palette, snapping grid, wires that work out their own nodes, rotate, delete, undo/redo, save/open, and netlist export/import.
+- Live simulation: every edit re-solves the circuit; sliders change part values while you watch; animated dots show current flowing, faster for bigger currents; hover anything for its voltage, current and power.
+- Virtual instruments: a 4-channel oscilloscope, a multimeter, a Bode plotter and a spectrum analyzer.
+- Explain mode in the browser: step through the solution while the parts each step talks about light up.
+- A 3D breadboard view with step-by-step build instructions (resistor color bands included).
+
+To publish it, push to GitHub and set Settings > Pages > Source to "GitHub Actions"; `.github/workflows/pages.yml` does the rest.
+
 ## Visual and educational (v0.5)
 
 ![Explain mode stepping through a circuit](docs/images/explain.gif)

@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>MiniSpice engine smoke test</title>
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.27.7/full/pyodide.js"></script>
+</head>
+<body>
+  <h1>MiniSpice engine smoke test</h1>
+  <p>Loads the engine bundle into Pyodide on this page and runs one of each analysis. Serve the web
+  folder (python web/serve.py) and open /tests/smoke.html.</p>
+  <pre id="out">running…</pre>
+  <script>
+    (async () => {
+      const out = document.getElementById("out");
+      const lines = [];
+      const log = (text) => { lines.push(text); out.textContent = lines.join("\n"); };
+      try {
+        const pyodide = await loadPyodide({ indexURL: "https://cdn.jsdelivr.net/pyodide/v0.27.7/full/" });
+        await pyodide.loadPackage(["numpy"]);
+        const bundle = await (await fetch("../engine/minispice.json")).json();
+        for (const [path, source] of Object.entries(bundle.files)) {
+          pyodide.FS.mkdirTree("/home/pyodide/" + path.split("/").slice(0, -1).join("/"));
+          pyodide.FS.writeFile("/home/pyodide/" + path, source);
+        }
+        pyodide.runPython("import sys; sys.path.insert(0, '/home/pyodide')");
+        log("python " + pyodide.runPython("import sys; sys.version.split()[0]"));
+        const api = pyodide.pyimport("minispice.webapi");
+        const call = (fn, ...args) => JSON.parse(api.call(fn, JSON.stringify(args)));
+        const dc = call("solve", "V1 1 0 10\nR1 1 2 1k\nR2 2 0 1k\nD1 0 3\nR3 3 0 1k\n");
+        log("solve ok=" + dc.ok + " v(2)=" + (dc.ok ? dc.nodes["2"].toFixed(4) : dc.error));
+        const tr = call("transient", "V1 1 0 STEP(0 5 0)\nR1 1 2 1k\nC1 2 0 1u\n", 1e-5, 5e-3, ["v(2)"]);
+        log("transient ok=" + tr.ok + " v(2)@1ms=" + (tr.ok ? tr.series["v(2)"][100].toFixed(4) : tr.error));
+        const ac = call("ac", "V1 1 0 0\nR1 1 2 1k\nC1 2 0 1u\n", "V1", 1, 1e5, 10, ["v(2)"]);
+        log("ac ok=" + ac.ok + " points=" + (ac.ok ? ac.freqs.length : ac.error));
+        const ex = call("explain", "V1 1 0 10\nR1 1 2 1k\nR2 2 0 1k\n");
+        log("explain ok=" + ex.ok + " steps=" + (ex.ok ? ex.steps.length : ex.error));
+        const bad = call("solve", "V1 1 0 10\nR1 1 2\n");
+        log("error handling ok=" + (bad.ok === false && bad.error.includes("line 2")));
+        const checks = [
+          dc.ok && Math.abs(dc.nodes["2"] - 5) < 1e-9,
+          tr.ok && Math.abs(tr.series["v(2)"][100] - 3.1606) < 0.01,
+          ac.ok && ac.freqs.length === 51 && Math.abs(ac.magnitude_db["v(2)"][0]) < 0.01,
+          ex.ok && ex.steps.length > 5,
+          bad.ok === false && bad.error.includes("line 2"),
+        ];
+        if (checks.includes(false)) throw new Error("wrong answers: " + JSON.stringify(checks));
+        log("SMOKE TEST PASSED");
+      } catch (error) {
+        log("SMOKE TEST FAILED: " + error);
+      }
+      document.title = lines.join(" | ");
+    })();
+  </script>
+</body>
+</html>

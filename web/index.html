@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MiniSpice</title>
+  <meta name="description" content="A circuit simulator in your browser: draw a circuit, watch the current flow, and see every law it uses.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>MiniSpice</h1>
+    <input id="design-title" placeholder="Untitled circuit" aria-label="Circuit name">
+    <div id="toolbar" role="toolbar" aria-label="Editing tools">
+      <button data-mode="select" class="active" title="Select and move (Esc)">Select</button>
+      <button data-mode="wire" title="Draw wires (W)">Wire</button>
+      <button data-mode="probe" title="Add oscilloscope probes">Probe</button>
+      <span class="sep"></span>
+      <button id="rotate" title="Rotate (R)">Rotate</button>
+      <button id="delete" title="Delete (Del)">Delete</button>
+      <button id="undo" title="Undo (Ctrl+Z)">Undo</button>
+      <button id="redo" title="Redo (Ctrl+Y)">Redo</button>
+      <span class="sep"></span>
+      <button id="new">New</button>
+      <button id="open">Open</button>
+      <button id="save" title="Save the drawing as .minispice.json">Save</button>
+      <button id="export" title="Download the netlist (.cir) for the command-line simulator">Export .cir</button>
+      <select id="examples" aria-label="Examples"></select>
+      <input id="open-file" type="file" accept=".json,.cir,.sp,.net,.txt" hidden>
+      <span class="sep"></span>
+      <label><input id="live" type="checkbox" checked> Live</label>
+      <label><input id="animate" type="checkbox" checked> Current flow</label>
+      <a href="breadboard/index.html" target="_blank" rel="noopener" class="button">3D breadboard</a>
+    </div>
+  </header>
+
+  <main>
+    <nav id="palette" aria-label="Parts"></nav>
+    <section id="canvas-wrap">
+      <svg id="schematic" width="1800" height="1100" data-mode="select">
+        <defs>
+          <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <circle cx="0" cy="0" r="1.1" class="grid-dot"/>
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#grid)"/>
+        <g id="content"></g>
+      </svg>
+    </section>
+    <aside id="inspector">
+      <h2>Inspector</h2>
+      <div id="inspector-body"></div>
+      <h2>Multimeter</h2>
+      <div class="meter">
+        <div id="meter-display">----</div>
+        <label>Measure
+          <select id="meter-mode">
+            <option value="V">Voltage</option>
+            <option value="A">Current</option>
+            <option value="W">Power</option>
+          </select>
+        </label>
+        <div id="meter-voltage-leads">
+          <label>Red lead <select id="meter-plus"></select></label>
+          <label>Black lead <select id="meter-com"></select></label>
+        </div>
+        <div id="meter-part-lead" hidden>
+          <label>Through <select id="meter-part"></select></label>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <div id="status" role="status">Starting…</div>
+
+  <section id="panel">
+    <div id="tabs" role="tablist">
+      <button class="active" data-tab="tab-scope">Oscilloscope</button>
+      <button data-tab="tab-bode">Bode plotter</button>
+      <button data-tab="tab-spectrum">Spectrum analyzer</button>
+      <button data-tab="tab-explain">Explain</button>
+      <button data-tab="tab-netlist">Netlist</button>
+    </div>
+
+    <div id="tab-scope" class="tab-page">
+      <div class="controls">
+        <label>Run for <input id="scope-stop" value="5m" size="6"> s</label>
+        <label>Step <input id="scope-step" value="10u" size="6"> s</label>
+        <label>Time/div <select id="scope-timediv"></select></label>
+        <button id="scope-run" class="primary">Run</button>
+        <span class="sep"></span>
+        <button id="scope-connect" title="Read a microcontroller over USB (Chrome or Edge)">Connect board</button>
+        <label>ADC ref <input id="scope-vref" value="5" size="3"> V</label>
+        <label>bits <input id="scope-bits" value="10" size="2"></label>
+        <button id="scope-clear-measured">Clear measured</button>
+      </div>
+      <canvas id="scope-canvas" class="screen"></canvas>
+    </div>
+
+    <div id="tab-bode" class="tab-page" hidden>
+      <div class="controls">
+        <label>Drive <select id="bode-source"></select> with 1 V AC</label>
+        <label>Measure <select id="bode-output"></select></label>
+        <label>from <input id="bode-fstart" value="1" size="5"> Hz</label>
+        <label>to <input id="bode-fstop" value="1meg" size="5"> Hz</label>
+        <button id="bode-run" class="primary">Sweep</button>
+        <span id="bode-readout" class="readout-text"></span>
+      </div>
+      <div class="charts">
+        <canvas id="bode-mag" class="chart"></canvas>
+        <canvas id="bode-phase" class="chart"></canvas>
+      </div>
+    </div>
+
+    <div id="tab-spectrum" class="tab-page" hidden>
+      <div class="controls">
+        <label>Signal at <select id="spectrum-probe"></select></label>
+        <label><input id="spectrum-log" type="checkbox" checked> dB scale</label>
+        <button id="spectrum-run" class="primary">Analyze</button>
+        <span id="spectrum-readout" class="readout-text"></span>
+        <span class="hint">Uses the oscilloscope's run time and step.</span>
+      </div>
+      <canvas id="spectrum-canvas" class="chart wide"></canvas>
+    </div>
+
+    <div id="tab-explain" class="tab-page" hidden>
+      <div class="controls">
+        <button id="explain-run" class="primary">Explain the DC solution</button>
+        <button id="explain-prev" disabled>Back</button>
+        <button id="explain-next" disabled>Next</button>
+        <span id="explain-counter"></span>
+        <strong id="explain-title"></strong>
+      </div>
+      <div id="explain-step"></div>
+    </div>
+
+    <div id="tab-netlist" class="tab-page" hidden>
+      <div class="controls">
+        <button id="netlist-solve" class="primary">Solve this netlist</button>
+        <button id="netlist-load">Draw it in the editor</button>
+        <button id="netlist-reset">Reset to the drawing</button>
+        <span class="hint">Paste any SPICE-style netlist here.</span>
+      </div>
+      <div class="netlist-split">
+        <textarea id="netlist-text" spellcheck="false" aria-label="Netlist"></textarea>
+        <div id="netlist-results"></div>
+      </div>
+    </div>
+  </section>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
