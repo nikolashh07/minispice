@@ -21,7 +21,6 @@ While building:
 
 ```
 minispice/
-├── CLAUDE.md
 ├── PLAN.md
 ├── README.md
 ├── pyproject.toml
