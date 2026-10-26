@@ -33,6 +33,11 @@ def build_parser():
     analyses.add_argument("--tran", nargs="*", metavar="TIME", help="transient: --tran TSTEP TSTOP (or use the netlist's .tran)")
     analyses.add_argument("--ac", nargs="*", metavar="ARG", help="AC sweep: --ac dec POINTS FSTART FSTOP (or use the netlist's .ac)")
     analyses.add_argument("--four", type=str, metavar="FREQ", help="Fourier analysis of the transient result at fundamental FREQ")
+    analyses.add_argument("--sweep", nargs=4, metavar=("NAME", "START", "STOP", "STEP"), help="DC sweep of a source, a part's value, or temp")
+    analyses.add_argument("--mc", type=int, metavar="RUNS", help="Monte Carlo: RUNS random builds within each part's tol=")
+    analyses.add_argument("--worst-case", action="store_true", help="worst-case output with every toleranced part at an extreme")
+    analyses.add_argument("--sens", metavar="EXPR", help="sensitivity of EXPR (like v(out)) to every part, ranked")
+    analyses.add_argument("--noise", nargs="+", metavar="ARG", help="noise at OUTPUT [INPUT SOURCE], e.g. --noise v(out) VIN (frequencies from --ac or .ac)")
 
     options = parser.add_argument_group("options")
     options.add_argument("--remove", action="append", default=[], metavar="PART", help="remove a part (like a load) before a theorem analysis")
@@ -41,6 +46,9 @@ def build_parser():
     options.add_argument("--plot", nargs="?", const="output", metavar="DIR", help="save plots as PNG files (default folder: output)")
     options.add_argument("--method", choices=["be", "trap"], help="transient integration: backward Euler or trapezoidal (default)")
     options.add_argument("--fixed-step", action="store_true", help="transient: use a fixed time step instead of adaptive")
+    options.add_argument("--step", nargs="+", metavar="ARG", help="rerun the analyses for several values: --step R1 1k 2k 5k")
+    options.add_argument("--seed", type=int, default=1, help="Monte Carlo random seed (default 1)")
+    options.add_argument("--gaussian", action="store_true", help="Monte Carlo: normal distribution (tol = 3 sigma) instead of uniform")
     return parser
 
 
@@ -235,6 +243,130 @@ def run_four(circuit, args):
             print(f"Plot saved to {plot_harmonics(f, f'{args.plot}/harmonics.png', f'Harmonics of {p}')}")
 
 
+def run_sweep(circuit, args):
+    from .analysis.sweep import dc_from_directive, dc_sweep, sweep_values
+    from .units import parse_value
+
+    if args.sweep:
+        name, start, stop, step = args.sweep
+        result = dc_sweep(circuit, name, sweep_values(parse_value(start), parse_value(stop), parse_value(step)))
+    else:
+        result = dc_from_directive(circuit, circuit.find_directives("dc")[0])
+    probes = _probes(circuit, args)
+    unit = "°C" if result.name.lower() == "temp" else (circuit.get(result.name).unit if circuit.has(result.name) else "")
+    print(heading(f"DC sweep of {result.name}"))
+    curves = {p: result.measure(p) for p in probes}
+    rows = [[format_eng(result.values[k], unit)] + [format_eng(curves[p][k], _unit_of(p)) for p in probes]
+            for k in _sample_rows(len(result.values), 26)]
+    print(table([result.name] + probes, rows))
+    if args.plot:
+        from .plotting import plot_sweep
+
+        path = plot_sweep(result.values, curves, f"{args.plot}/sweep.png", f"{result.name} ({unit})", f"DC sweep of {result.name}")
+        print(f"\nPlot saved to {path}")
+
+
+def _first_probe(circuit, args, directive_kind):
+    import re
+
+    if args.probe:
+        return args.probe[0]
+    found = circuit.find_directives(directive_kind)
+    if found:
+        match = re.search(r"\w+\([^)]*\)", found[0].raw)
+        if match:
+            return match.group(0)
+    raise MiniSpiceError(f"Say which output to measure with --probe, like --probe v(out)")
+
+
+def run_mc(circuit, args):
+    from .analysis.montecarlo import monte_carlo
+
+    runs, seed, gaussian = args.mc, args.seed, args.gaussian
+    if runs is None:
+        directive = circuit.find_directives("mc")[0]
+        runs = int(directive.args[0]) if directive.args and directive.args[0].isdigit() else 200
+        seed = int(directive.keywords.get("seed", seed))
+        gaussian = gaussian or directive.keywords.get("dist", "") == "gaussian"
+    expr = _first_probe(circuit, args, "mc")
+    result = monte_carlo(circuit, expr, runs, seed, "gaussian" if gaussian else "uniform")
+    unit = _unit_of(expr)
+    print(heading(f"Monte Carlo: {runs} random builds, {expr}"))
+    print(table(["Statistic", "Value"], [
+        ("nominal", format_eng(result.nominal, unit)),
+        ("mean", format_eng(result.mean, unit)),
+        ("standard deviation", format_eng(result.std, unit)),
+        ("lowest", format_eng(result.low, unit)),
+        ("highest", format_eng(result.high, unit)),
+    ]))
+    if args.plot:
+        from .plotting import plot_histogram
+
+        print(f"\nPlot saved to {plot_histogram(result.values, f'{args.plot}/montecarlo.png', expr, f'Monte Carlo ({runs} runs)')}")
+
+
+def run_worst_case(circuit, args):
+    from .analysis.montecarlo import worst_case
+
+    expr = _first_probe(circuit, args, "mc")
+    result = worst_case(circuit, expr)
+    unit = _unit_of(expr)
+    print(heading(f"Worst case of {expr} ({result.method})"))
+    print(table(["", "Value", "Part values"], [
+        ("lowest", format_eng(result.low, unit), ", ".join(f"{k}={v:.4g}" for k, v in result.low_corner.items())),
+        ("nominal", format_eng(result.nominal, unit), ""),
+        ("highest", format_eng(result.high, unit), ", ".join(f"{k}={v:.4g}" for k, v in result.high_corner.items())),
+    ]))
+
+
+def run_sens(circuit, args):
+    from .analysis.sensitivity import sensitivity
+
+    expr = args.sens or _first_probe(circuit, args, "sens")
+    rows = []
+    for s in sensitivity(circuit, expr):
+        part_unit = circuit.get(s.name).unit
+        rows.append((s.name, s.kind, format_eng(s.value, part_unit), f"{s.derivative:.4g}", f"{s.normalized:+.4f}"))
+    print(heading(f"Sensitivity of {expr}, most influential first"))
+    print(table(["Part", "Type", "Value", "d(output)/d(value)", "% per %"], rows))
+    print("\n'% per %' is how many percent the output moves when the part changes by 1 %.")
+
+
+def run_noise(circuit, args):
+    from .analysis.noise import noise_analysis, noise_from_directive
+    from .units import parse_value
+
+    if args.noise:
+        output = args.noise[0]
+        source = args.noise[1] if len(args.noise) > 1 else None
+        if args.ac and len(args.ac) == 4:
+            sweep, points, f1, f2 = args.ac[0], parse_value(args.ac[1]), parse_value(args.ac[2]), parse_value(args.ac[3])
+        elif circuit.find_directives("ac"):
+            a = circuit.find_directives("ac")[0].args
+            sweep, points, f1, f2 = a[0], parse_value(a[1]), parse_value(a[2]), parse_value(a[3])
+        else:
+            sweep, points, f1, f2 = "dec", 10, 1.0, 1e6
+        result = noise_analysis(circuit, output, source, f1, f2, points, sweep)
+    else:
+        result = noise_from_directive(circuit, circuit.find_directives("noise")[0])
+    print(heading(f"Noise at {result.output}"))
+    headers = ["Frequency", "Output (V/√Hz)"] + (["Input-referred"] if result.gain is not None else [])
+    rows = []
+    for k in _sample_rows(len(result.freqs), 15):
+        row = [format_eng(result.freqs[k], "Hz"), format_eng(result.output_density[k], "V")]
+        if result.gain is not None:
+            row.append(format_eng(result.input_density[k], "V"))
+        rows.append(row)
+    print(table(headers, rows))
+    print(f"\nTotal output noise from {format_eng(result.freqs[0], 'Hz')} to {format_eng(result.freqs[-1], 'Hz')}: "
+          f"{format_eng(result.total_rms(), 'V')} rms")
+    print(table(["Part", "Share of noise power"], [(n, f"{share * 100:.1f} %") for n, share in result.ranked_contributors()[:8]]))
+    if args.plot:
+        from .plotting import plot_noise
+
+        print(f"\nPlot saved to {plot_noise(result.freqs, result.output_density, f'{args.plot}/noise.png')}")
+
+
 # (option name, handler). Order is the order results are printed.
 HANDLERS = [
     ("op", run_op),
@@ -245,10 +377,33 @@ HANDLERS = [
     ("tran", run_tran),
     ("ac", run_ac),
     ("four", run_four),
+    ("sweep", run_sweep),
+    ("mc", run_mc),
+    ("worst_case", run_worst_case),
+    ("sens", run_sens),
+    ("noise", run_noise),
 ]
 
 # Netlist dot-commands that map to a handler, for when no analysis option is given.
-DIRECTIVE_HANDLERS = {"op": run_op, "tran": run_tran, "ac": run_ac, "four": run_four}
+DIRECTIVE_HANDLERS = {
+    "op": run_op, "tran": run_tran, "ac": run_ac, "four": run_four,
+    "dc": run_sweep, "mc": run_mc, "sens": run_sens, "noise": run_noise,
+}
+
+
+def _step_plan(circuit, args):
+    """(part name, values) from --step or .step, or None."""
+    from .analysis.sweep import step_values
+    from .units import parse_value
+
+    if args.step:
+        if len(args.step) < 2:
+            raise MiniSpiceError("--step needs a part and at least one value: --step R1 1k 2k 5k")
+        return args.step[0], [parse_value(v) for v in args.step[1:]]
+    found = circuit.find_directives("step")
+    if found:
+        return step_values(found[0].args)
+    return None
 
 
 def main(argv=None):
@@ -273,8 +428,22 @@ def main(argv=None):
                 if d.kind in DIRECTIVE_HANDLERS and DIRECTIVE_HANDLERS[d.kind] not in kinds:
                     kinds.append(DIRECTIVE_HANDLERS[d.kind])
             chosen = kinds or [run_op]
-        for handler in chosen:
-            handler(circuit, args)
+        steps = _step_plan(circuit, args)
+        if steps is None:
+            for handler in chosen:
+                handler(circuit, args)
+        else:
+            from .analysis.sweep import set_value
+
+            name, values = steps
+            for value in values:
+                work = circuit.copy()
+                set_value(work, name, value)
+                unit = work.get(name).unit if name.lower() != "temp" else "°C"
+                print(f"\n########## {name} = {format_eng(value, unit)} ##########")
+                args._tran_result = None
+                for handler in chosen:
+                    handler(work, args)
     except FileNotFoundError as error:
         print(f"error: can't open '{error.filename}'", file=sys.stderr)
         return 2

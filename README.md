@@ -28,6 +28,21 @@ R2    resistor        5 V      5 mA     25 mW
 Sources deliver 50 mW, parts absorb 50 mW: balanced (sum of all powers = 0 W)
 ```
 
+## Pro-level analysis (v0.4)
+
+```
+python -m minispice examples/diode_curve.cir --probe "i(D1)" --plot
+python -m minispice examples/divider_tolerance.cir --worst-case --probe "v(2)"
+python -m minispice examples/resistor_noise.cir
+```
+
+- DC sweeps of sources, part values or temperature, and `.step` parameter sweeps of any analysis.
+- Subcircuits with parameters, `.include`, `.model`, and SPICE netlists from other tools.
+- Sparse matrices for big circuits: a 10,000-node mesh solves in well under a second ([benchmarks](docs/benchmarks.md)).
+- Monte Carlo with part tolerances, worst-case corners, and a ranked sensitivity list.
+- Noise analysis: Johnson-Nyquist thermal noise and shot noise, output and input-referred.
+- Validation against ngspice: `python tools/compare_ngspice.py` (needs ngspice installed).
+
 ## Semiconductors (v0.3)
 
 ```

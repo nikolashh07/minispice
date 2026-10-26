@@ -21,6 +21,7 @@ class Diode(Component):
     kind = "diode"
     terminals = ("a", "k")
     nonlinear = True
+    MODEL_PARAMS = {"is", "n", "rs", "bv", "ibv", "eg", "xti"}
 
     def __init__(self, name, anode, cathode, model, area=1.0):
         super().__init__(name, [anode, cathode])

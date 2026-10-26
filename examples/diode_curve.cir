@@ -1,0 +1,4 @@
+* Diode I-V curve: sweep the voltage across a diode and watch the current grow exponentially
+V1 a 0 0
+D1 a 0
+.dc V1 0 0.8 0.01

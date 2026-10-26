@@ -70,3 +70,22 @@ def test_ac_and_fourier_options(capsys):
 def test_missing_transient_settings(capsys):
     code, _, err = run(capsys, EXAMPLES / "divider.cir", "--tran")
     assert code == 1 and "No transient settings" in err
+
+
+def test_part_d_options(capsys, tmp_path):
+    code, out, _ = run(capsys, EXAMPLES / "divider_tolerance.cir", "--plot", tmp_path)
+    assert code == 0 and "Monte Carlo" in out and "+0.5000" in out
+    assert (tmp_path / "montecarlo.png").exists()
+    code, out, _ = run(capsys, EXAMPLES / "divider_tolerance.cir", "--worst-case", "--probe", "v(2)")
+    assert code == 0 and "4.75 V" in out and "5.25 V" in out
+    code, out, _ = run(capsys, EXAMPLES / "diode_curve.cir", "--probe", "i(D1)")
+    assert code == 0 and "DC sweep of V1" in out
+    code, out, _ = run(capsys, EXAMPLES / "resistor_noise.cir")
+    assert code == 0 and "2.038 µV rms" in out
+    code, out, _ = run(capsys, EXAMPLES / "divider.cir", "--step", "R2", "1k", "3k")
+    assert code == 0 and "R2 = 3 kΩ" in out and "7.5 V" in out
+
+
+def test_sens_option(capsys):
+    code, out, _ = run(capsys, EXAMPLES / "divider.cir", "--sens", "v(2)")
+    assert code == 0 and "-0.5000" in out

@@ -30,6 +30,7 @@ class BJT(Component):
     kind = "BJT"
     terminals = ("c", "b", "e")
     nonlinear = True
+    MODEL_PARAMS = {"is", "bf", "br", "nf", "nr", "vaf", "eg", "xti"}
 
     def __init__(self, name, c, b, e, model):
         super().__init__(name, [c, b, e])

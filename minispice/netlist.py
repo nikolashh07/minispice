@@ -99,7 +99,25 @@ def parse(text, source="netlist", base_dir=None):
 
     if problems:
         raise NetlistError(problems, source)
+    _warn_unused_model_params(circuit)
     return circuit
+
+
+def _warn_unused_model_params(circuit):
+    """Models copied from other simulators often have parameters MiniSpice doesn't simulate
+    (junction capacitance, high-injection effects, ...). Say so instead of silently ignoring them."""
+    reported = set()
+    for comp in circuit.components:
+        model = getattr(comp, "model", None)
+        known = getattr(comp, "MODEL_PARAMS", None)
+        if model is None or known is None or model.name in reported:
+            continue
+        reported.add(model.name)
+        unused = sorted(set(model.params) - known)
+        if unused:
+            circuit.warnings.append(
+                f"model {model.name}: MiniSpice doesn't simulate {', '.join(p.upper() for p in unused)}, so those parameters are ignored"
+            )
 
 
 def _add(circuit, comp, where):

@@ -26,6 +26,7 @@ class MOSFET(Component):
     kind = "MOSFET"
     terminals = ("d", "g", "s")
     nonlinear = True
+    MODEL_PARAMS = {"vto", "kp", "lambda", "level"}
 
     def __init__(self, name, d, g, s, model, w=1.0, l=1.0):
         super().__init__(name, [d, g, s])

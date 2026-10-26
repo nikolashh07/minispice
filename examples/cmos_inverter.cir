@@ -1,8 +1,12 @@
 * CMOS inverter with matched transistors: the output flips when the input crosses VDD/2
+* A little channel-length modulation (LAMBDA) makes the steep middle of the curve well defined:
+* with LAMBDA = 0, two saturated transistors in series leave the output voltage undetermined.
 * expect: v(out) = 2.5
 VDD vdd 0 5
 VIN in 0 2.5
-M1 out in 0 nmos
-M2 out in vdd pmos
+M1 out in 0 n1
+M2 out in vdd p1
+.model n1 NMOS(VTO=1 KP=1m LAMBDA=0.02)
+.model p1 PMOS(VTO=-1 KP=1m LAMBDA=0.02)
 .op
 .dc VIN 0 5 0.05

@@ -1,0 +1,9 @@
+* Divider built from two 5 % resistors
+* By hand: the middle voltage is lowest with R1 high and R2 low, highest the other way round:
+*   Vmin = 10 × 0.95k / (1.05k + 0.95k) = 4.75 V,  Vmax = 10 × 1.05k / (0.95k + 1.05k) = 5.25 V
+* expect: v(2) = 5
+V1 1 0 10
+R1 1 2 1k tol=5%
+R2 2 0 1k tol=5%
+.mc 500 v(2)
+.sens v(2)

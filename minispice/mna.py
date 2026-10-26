@@ -81,10 +81,18 @@ class MNASystem:
 
     def conductance(self, a, b, g):
         """Stamp a conductance g between nodes a and b."""
-        self.add(a, a, g)
-        self.add(b, b, g)
-        self.add(a, b, -g)
-        self.add(b, a, -g)
+        # The most common stamp by far, so it appends all four entries at once instead of
+        # making four add() calls (profiling showed those calls were the slowest part of big solves).
+        if a >= 0 and b >= 0:
+            self.rows.extend((a, b, a, b))
+            self.cols.extend((a, b, b, a))
+            self.vals.extend((g, g, -g, -g))
+        else:
+            node = a if a >= 0 else b
+            if node >= 0:
+                self.rows.append(node)
+                self.cols.append(node)
+                self.vals.append(g)
 
     def current_source(self, a, b, current):
         """A current that flows out of node a, through the part, and into node b."""

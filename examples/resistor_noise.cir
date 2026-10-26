@@ -1,0 +1,7 @@
+* Thermal noise of a 1k resistor: sqrt(4kTR) = 4.07 nV/√Hz at 27 °C
+* With the 1 nF capacitor, the total noise over all frequencies is sqrt(kT/C) = 2.04 µV,
+* whatever the resistor value.
+V1 in 0 DC 0 AC 1
+R1 in out 1k
+C1 out 0 1n
+.noise v(out) V1 dec 20 1 10g
