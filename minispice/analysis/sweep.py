@@ -55,7 +55,8 @@ def dc_sweep(circuit, name, values):
         solution = operating_point(work, x0=x)
         x = solution.x
         solutions.append(solution)
-    return SweepResult(name, np.asarray(values, dtype=float), solutions)
+    display = name if name.lower() == "temp" else circuit.get(name).name
+    return SweepResult(display, np.asarray(values, dtype=float), solutions)
 
 
 def parameter_sweep(circuit, name, values, run):
