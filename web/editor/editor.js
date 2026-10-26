@@ -86,6 +86,7 @@ export class Editor {
     this.design = { parts: design.parts.map((p) => ({ rot: 0, ...p })), wires: design.wires.map((w) => ({ ...w })) };
     this.nextId = Math.max(0, ...this.design.parts.map((p) => p.id)) + 1;
     this.selected = null;
+    this.onSelect(null); // clears the inspector, which would otherwise show a part that no longer exists
     this.results = null;
     this.probes = [];
     if (recordUndo) this.commit(before);

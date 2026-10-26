@@ -1,9 +1,36 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "minispice"
-version = "1.0.0"
+version = "1.1.0"
 description = "A Python circuit simulator that solves circuits with circuit laws and explains each step."
+readme = "README.md"
 requires-python = ">=3.12"
 license = "MIT"
+license-files = ["LICENSE"]
+keywords = ["circuit", "simulator", "spice", "electronics", "education", "mna"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Education",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Electronic Design Automation (EDA)",
+]
+dependencies = ["numpy>=1.26", "matplotlib>=3.8"]
+
+[project.optional-dependencies]
+fast = ["scipy>=1.11"]           # sparse matrices for circuits with hundreds of nodes or more
+schematic = ["schemdraw>=0.19"]  # auto-drawn schematics
+hardware = ["pyserial>=3.5"]     # reading a microcontroller over USB
+all = ["scipy>=1.11", "schemdraw>=0.19", "pyserial>=3.5"]
+
+[project.scripts]
+minispice = "minispice.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["minispice*"]
 
 [tool.pytest.ini_options]
 # Puts the project root on the import path so tests can `import minispice`.

@@ -1,10 +1,22 @@
 # MiniSpice
 
-A Python circuit simulator that solves netlists with circuit laws and explains each step.
+[![Tests](https://github.com/YOUR-USERNAME/minispice/actions/workflows/tests.yml/badge.svg)](https://github.com/YOUR-USERNAME/minispice/actions/workflows/tests.yml)
+![Coverage](https://img.shields.io/endpoint?url=https%3A%2F%2FYOUR-USERNAME.github.io%2Fminispice%2Fcoverage.json)
+
+**A circuit simulator that solves circuits with circuit laws and shows its work.** Draw a circuit
+(or write a SPICE netlist), and MiniSpice finds every voltage, current and power, then explains
+which law it used at each step. It runs in your browser, on the command line, or from Python.
+
+![MiniSpice in the browser: live simulation, explain mode and the oscilloscope](docs/images/web_app.png)
+
+**[Try it in your browser](https://YOUR-USERNAME.github.io/minispice/app/)** · [Documentation](https://YOUR-USERNAME.github.io/minispice/) · [Changelog](CHANGELOG.md)
+
+*(Replace `YOUR-USERNAME` with your GitHub name after pushing, and set Settings > Pages > Source to "GitHub Actions".)*
 
 ## Quick start
 
 ```
+pip install minispice          # once published to PyPI; until then use a copy of the repository:
 python -m venv .venv
 .venv\Scripts\activate          (Windows)   or   source .venv/bin/activate
 pip install -r requirements.txt

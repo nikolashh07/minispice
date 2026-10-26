@@ -1,6 +1,7 @@
-# Publishes the browser app to GitHub Pages on every push to main.
+# Publishes the documentation site, the browser app (under /app/) and the coverage badge
+# to GitHub Pages on every push to main.
 # One-time setup on GitHub: Settings > Pages > Source: "GitHub Actions".
-name: Deploy web app
+name: Deploy site
 
 on:
   push:
@@ -24,12 +25,23 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Bundle the Python engine for the browser
-        run: python web/build_engine.py
+      - name: Install
+        run: pip install -r requirements.txt
+      - name: Documentation
+        run: mkdocs build --strict
+      - name: Browser app with the engine bundled in
+        run: |
+          cp -r web site/app
+          python -c "import sys, pathlib; sys.path.insert(0, 'web'); import build_engine; build_engine.build(pathlib.Path('site/app/engine/minispice.json'))"
+      - name: Coverage badge
+        run: |
+          coverage run --source=minispice -m pytest -q
+          coverage json -o coverage.json
+          python tools/coverage_badge.py coverage.json site/coverage.json
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: web
+          path: site
   deploy:
     needs: build
     runs-on: ubuntu-latest

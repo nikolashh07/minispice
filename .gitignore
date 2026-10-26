@@ -13,3 +13,14 @@ __pycache__/
 # Generated plots
 output/
 web/engine/
+
+# Packaging output
+build/
+dist/
+
+# Docs site output
+site/
+
+# Coverage data
+.coverage
+coverage.json

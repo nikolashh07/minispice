@@ -1,0 +1,23 @@
+site_name: MiniSpice
+site_description: A circuit simulator that solves circuits with circuit laws and explains each step.
+theme:
+  name: readthedocs
+nav:
+  - Home: index.md
+  - Getting started: getting-started.md
+  - Netlist format: netlist.md
+  - Analyses: analyses.md
+  - Command line: cli.md
+  - Explain mode and homework: education.md
+  - Web app: web.md
+  - Simulation vs reality: lab.md
+  - How it works: how-it-works.md
+  - Benchmarks: benchmarks.md
+  - Validation against ngspice: validation.md
+  - About:
+      - How I built it: writeup.md
+      - Demo video script: demo-video-script.md
+markdown_extensions:
+  - tables
+  - toc:
+      permalink: true

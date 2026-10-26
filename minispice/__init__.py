@@ -1,6 +1,6 @@
 """MiniSpice: a circuit simulator that solves circuits with circuit laws and explains each step."""
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 from .analysis.dc import operating_point
 from .circuit import Circuit
