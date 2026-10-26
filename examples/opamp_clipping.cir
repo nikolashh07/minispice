@@ -1,0 +1,7 @@
+* Gain of -100 asks for -200 V, but the output can only reach the -15 V rail
+* expect: v(out) = -15 tol=0.1%
+VIN in 0 2
+RIN in minus 1k
+RF minus out 100k
+U1 0 minus out a=100k vpos=15 vneg=-15
+.op

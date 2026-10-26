@@ -1,0 +1,8 @@
+* 5.1 V Zener regulator: 10 V source, 1k series resistor
+* The Zener sits just above its 5.1 V breakdown and soaks up the extra current.
+* expect: v(out) = 5.15 tol=1%
+V1 in 0 10
+R1 in out 1k
+D1 0 out zener5v1
+RL out 0 10k
+.op

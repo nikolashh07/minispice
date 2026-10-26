@@ -32,8 +32,9 @@ BUILTIN_MODELS = {
         Model("pnp", "pnp", {}),
         Model("2n3904", "npn", {"is": 6.734e-15, "bf": 416.4, "br": 0.7371, "vaf": 74.03}),
         Model("2n3906", "pnp", {"is": 1.41e-15, "bf": 180.7, "br": 4.977, "vaf": 18.7}),
-        Model("nmos", "nmos", {}),
-        Model("pmos", "pmos", {}),
+        # Round numbers for hand calculations: k = KP = 1 mA/V², |Vt| = 1 V.
+        Model("nmos", "nmos", {"vto": 1.0, "kp": 1e-3}),
+        Model("pmos", "pmos", {"vto": -1.0, "kp": 1e-3}),
         Model("2n7000", "nmos", {"vto": 1.6, "kp": 0.1}),
         Model("opamp", "opamp", {}),
         Model("lm741", "opamp", {"a": 200e3, "gbw": 1e6, "vpos": 15, "vneg": -15}),

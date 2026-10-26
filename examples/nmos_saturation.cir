@@ -1,0 +1,6 @@
+* NMOS in saturation: Id = ½ k (Vgs - Vt)² = ½ × 1 mA/V² × (3 - 1)² = 2 mA
+* expect: i(M1) = 2m
+VDD d 0 5
+VG g 0 3
+M1 d g 0 nmos
+.op

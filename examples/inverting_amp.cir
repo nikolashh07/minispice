@@ -1,0 +1,8 @@
+* Inverting amplifier with an ideal op-amp: gain = -Rf/Rin = -10k/1k = -10
+* expect: v(out) = -5
+* expect: v(minus) = 0
+VIN in 0 0.5
+RIN in minus 1k
+RF minus out 10k
+U1 0 minus out
+.op

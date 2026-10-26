@@ -1,0 +1,9 @@
+* 5 V source, 1k resistor, one silicon diode
+* Hand estimate: Vd ≈ 0.7 V, so I ≈ (5 - 0.7)/1k = 4.3 mA.
+* Exact (IS = 1e-14): Vd = 0.693 V, I = 4.307 mA
+* expect: v(2) = 0.6929 tol=0.5%
+* expect: i(R1) = 4.307m tol=0.5%
+V1 1 0 5
+R1 1 2 1k
+D1 2 0
+.op

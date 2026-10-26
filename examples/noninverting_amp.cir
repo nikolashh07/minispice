@@ -1,0 +1,7 @@
+* Non-inverting amplifier: gain = 1 + Rf/Rg = 1 + 9k/1k = 10
+* expect: v(out) = 3
+VIN in 0 0.3
+U1 in minus out
+RF out minus 9k
+RG minus 0 1k
+.op

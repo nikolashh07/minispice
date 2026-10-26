@@ -58,7 +58,14 @@ def newton(components, layout, ctx, x0, max_iter=100, sparse=None):
         if linear:
             return x_new, 1
         if not ctx.limited and converged(x_new, x, n_nodes):
-            return x_new, iteration
+            # Newton's error shrinks quadratically, so one more step for the price of one solve
+            # leaves KCL satisfied to near machine precision (and the power balance exact).
+            ctx.x = x_new
+            system = assemble(components, layout, ctx)
+            if ctx.gshunt:
+                for row in range(n_nodes):
+                    system.add(row, row, ctx.gshunt)
+            return system.solve(layout, sparse), iteration + 1
         x = x_new
     raise ConvergenceError(f"Newton's method did not converge in {max_iter} iterations")
 

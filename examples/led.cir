@@ -1,0 +1,7 @@
+* Red LED with a 330 Ω current-limiting resistor on 5 V: about 1.8 V and 10 mA
+* expect: v(a) = 1.80 tol=2%
+* expect: i(D1) = 9.7m tol=2%
+V1 1 0 5
+R1 1 a 330
+D1 a 0 led_red
+.op

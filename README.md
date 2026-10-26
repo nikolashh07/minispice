@@ -28,6 +28,19 @@ R2    resistor        5 V      5 mA     25 mW
 Sources deliver 50 mW, parts absorb 50 mW: balanced (sum of all powers = 0 W)
 ```
 
+## Semiconductors (v0.3)
+
+```
+python -m minispice examples/bjt_bias.cir
+python -m minispice examples/inverting_amp.cir
+python -m minispice examples/two_stage_amp.cir --probe "v(out)" --plot
+```
+
+- Controlled sources (E, G, F, H), and ideal or realistic op-amps (finite gain, rail clipping, gain-bandwidth).
+- Diodes (Shockley equation), Zener diodes and LEDs, solved with Newton's method and SPICE-style voltage limiting.
+- NPN/PNP BJTs (Ebers-Moll) and N/P-channel MOSFETs (square law), with the operating region of each reported.
+- Circuit temperature: diode and BJT currents follow kT/q and IS(T); resistors have temperature coefficients.
+
 ## Time and frequency (v0.2)
 
 | RC charging | Underdamped RLC | RC low-pass Bode plot |
