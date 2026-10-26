@@ -1,0 +1,9 @@
+* Lab 4: non-inverting amplifier, gain 1 + 10k/10k = 2, on a single 5 V supply
+* Use a rail-to-rail op-amp such as the MCP6002 (a 741 needs ±12 V supplies to work).
+VSUP vcc 0 5
+RA vcc in 22k tol=5%
+RB in 0 10k tol=5%
+U1 in minus out a=100k vpos=5 vneg=0 gbw=1meg
+RF out minus 10k tol=5%
+RG minus 0 10k tol=5%
+.op

@@ -20,7 +20,9 @@ def build_parser():
     parser = argparse.ArgumentParser(
         prog="python -m minispice",
         description="MiniSpice circuit simulator. Example: python -m minispice examples/divider.cir --dc",
-        epilog="Also: 'python -m minispice check FILE' checks homework answers, 'python -m minispice practice' gives practice problems.",
+        epilog=("Also: 'check FILE' checks homework answers, 'practice' gives practice problems, 'compare CIRCUIT CSV' "
+                "compares with measurements, 'measure --port PORT' records a microcontroller, 'overlay' plots both. "
+                "Example: python -m minispice practice"),
     )
     parser.add_argument("netlist", help="circuit file (.cir)")
     parser.add_argument("--version", action="version", version=f"MiniSpice {__version__}")
@@ -492,7 +494,73 @@ def practice_main(argv):
     return 0 if report.all_correct else 3
 
 
-SUBCOMMANDS = {"check": check_main, "practice": practice_main}
+def compare_main(argv):
+    """python -m minispice compare circuit.cir readings.csv: simulation vs your multimeter."""
+    from .hardware import compare, comparison_table, read_measurements
+
+    parser = argparse.ArgumentParser(prog="python -m minispice compare", description="Compare simulated values with measurements.")
+    parser.add_argument("netlist")
+    parser.add_argument("measurements", help="CSV with columns probe,measured (like v(2),4.93)")
+    parser.add_argument("--meter-resistance", default="10meg", help="your voltmeter's input resistance (default 10meg)")
+    args = parser.parse_args(argv)
+    from .units import parse_value
+
+    rows = compare(load(args.netlist), read_measurements(args.measurements), parse_value(args.meter_resistance))
+    print(comparison_table(rows))
+    return 0
+
+
+def measure_main(argv):
+    """python -m minispice measure --port COM3: record samples from the MiniSpice probe firmware."""
+    from .hardware import HardwareLink, write_samples
+
+    parser = argparse.ArgumentParser(prog="python -m minispice measure", description="Record voltages from a microcontroller.")
+    parser.add_argument("--port", required=True, help="serial port, like COM3 or /dev/ttyACM0")
+    parser.add_argument("--seconds", type=float, default=2.0)
+    parser.add_argument("--out", default="samples.csv")
+    parser.add_argument("--vref", type=float, default=5.0, help="ADC reference: 5 for an Arduino Uno, 3.3 for an ESP32")
+    parser.add_argument("--bits", type=int, default=10, help="ADC resolution: 10 for an Uno, 12 for an ESP32")
+    parser.add_argument("--baud", type=int, default=115200)
+    args = parser.parse_args(argv)
+    link = HardwareLink(args.port, args.baud, args.vref, args.bits)
+    try:
+        count = write_samples(args.out, link.samples(args.seconds))
+    finally:
+        link.close()
+    print(f"Saved {count} samples to {args.out}")
+    return 0
+
+
+def overlay_main(argv):
+    """python -m minispice overlay circuit.cir samples.csv --probe v(out) --channel a0"""
+    from .analysis.transient import TransientSettings, run_settings, settings_from_directive
+    from .hardware import read_samples
+    from .plotting import plot_overlay
+    from .units import parse_value
+
+    parser = argparse.ArgumentParser(prog="python -m minispice overlay", description="Plot measured samples on top of the simulation.")
+    parser.add_argument("netlist")
+    parser.add_argument("samples", help="CSV from 'python -m minispice measure'")
+    parser.add_argument("--probe", required=True, help="simulated quantity, like v(out)")
+    parser.add_argument("--channel", default="a0", help="measured column: a0, a1, ...")
+    parser.add_argument("--out", default="output/overlay.png")
+    args = parser.parse_args(argv)
+    circuit = load(args.netlist)
+    times, channels = read_samples(args.samples)
+    if args.channel not in channels:
+        raise MiniSpiceError(f"{args.samples} has no column {args.channel}; it has {', '.join(channels)}")
+    found = circuit.find_directives("tran")
+    if found:
+        settings = settings_from_directive(found[0])
+    else:
+        settings = TransientSettings(t_stop=max(times), t_step=max(times) / 500)
+    result = run_settings(circuit, settings)
+    path = plot_overlay(result.times, result.measure(args.probe), times, channels[args.channel], args.out, args.probe)
+    print(f"Plot saved to {path}")
+    return 0
+
+
+SUBCOMMANDS = {"check": check_main, "practice": practice_main, "compare": compare_main, "measure": measure_main, "overlay": overlay_main}
 
 
 def main(argv=None):

@@ -28,6 +28,12 @@ R2    resistor        5 V      5 mA     25 mW
 Sources deliver 50 mW, parts absorb 50 mW: balanced (sum of all powers = 0 W)
 ```
 
+## Real hardware
+
+- Five lab circuits with measurement sheets (`examples/lab/`): `python -m minispice compare` lines your multimeter readings up against the simulation and explains differences by simulating part tolerances and the meter's own 10 MΩ loading. See [docs/lab.md](docs/lab.md) for the procedure and the results table.
+- Arduino/ESP32 firmware (`firmware/`) streams four analog inputs over USB: record with `python -m minispice measure --port COM3`, then `python -m minispice overlay` plots measured over simulated. In the browser, the oscilloscope's **Connect board** button overlays live readings.
+- A 3D breadboard view that shows which hole every leg goes in.
+
 ## In the browser (v1.0)
 
 The whole simulator also runs in a web page: the same Python engine, loaded with [Pyodide](https://pyodide.org), so no server is needed and it can be hosted free on GitHub Pages.

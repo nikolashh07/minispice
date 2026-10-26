@@ -1,0 +1,6 @@
+* Lab 1: voltage divider on a breadboard, powered from an Arduino's 5 V pin
+* Parts: 10k and 4.7k resistors (5 %, gold band). Measure V(mid) and the supply with a multimeter.
+VSUP vcc 0 5
+R1 vcc mid 10k tol=5%
+R2 mid 0 4.7k tol=5%
+.op

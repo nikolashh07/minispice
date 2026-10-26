@@ -1,0 +1,5 @@
+* Lab 3: a 1N4148 diode forward biased through 1k from 5 V
+VSUP vcc 0 5
+R1 vcc d 1k tol=5%
+D1 d 0 1n4148
+.op

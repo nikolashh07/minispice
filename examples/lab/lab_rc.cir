@@ -1,0 +1,9 @@
+* Lab 5: RC charging, driven by the probe firmware's 50 Hz square wave on pin 9
+* Wire pin 9 -> 10k -> node cap -> 1 uF -> GND. Pin 9 goes to A0 and node cap to A1.
+* τ = RC = 10 ms, so each 10 ms half-cycle charges the capacitor to about 63 % of the way.
+* Record with:  python -m minispice measure --port COM3 --seconds 0.2 --out rc.csv
+* Compare with: python -m minispice overlay examples/lab/lab_rc.cir rc.csv --probe v(cap) --channel a1
+VPIN9 pin9 0 PULSE(0 5 0 1u 1u 10m 20m)
+R1 pin9 cap 10k
+C1 cap 0 1u
+.tran 50u 200m

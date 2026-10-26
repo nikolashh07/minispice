@@ -1,0 +1,6 @@
+* Lab 2: the same divider with 1 MΩ resistors, to see the multimeter load the circuit
+* A 10 MΩ meter in parallel with R2 makes it look like 909 kΩ, so you should read about 2.38 V, not 2.5 V.
+VSUP vcc 0 5
+R1 vcc mid 1meg tol=5%
+R2 mid 0 1meg tol=5%
+.op
