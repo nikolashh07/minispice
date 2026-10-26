@@ -1,0 +1,6 @@
+* 1 mA pushed into a 2k resistor to ground: V = I R = 2 V
+* expect: v(1) = 2
+* expect: p(I1) = -2m
+I1 0 1 1m
+R1 1 0 2k
+.op

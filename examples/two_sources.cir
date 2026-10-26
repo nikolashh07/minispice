@@ -1,0 +1,11 @@
+* Two voltage sources feeding one node
+* Hand solution, KCL at node 2 (in kΩ and mA):
+*   (V-10)/2 + V/4 + (V-5)/1 = 0  ->  7V = 40  ->  V = 5.714 V
+* expect: v(2) = 5.7142857
+* expect: i(V2) = 0.7142857m
+V1 1 0 10
+R1 1 2 2k
+R2 2 0 4k
+R3 2 3 1k
+V2 3 0 5
+.op

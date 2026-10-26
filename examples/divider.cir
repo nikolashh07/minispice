@@ -1,0 +1,11 @@
+* Voltage divider: two equal resistors split 10 V in half
+* expect: v(2) = 5
+* expect: i(V1) = -5m
+* expect: p(R1) = 25m
+* expect: p(R2) = 25m
+* expect: p(V1) = -50m
+V1 1 0 DC 10
+R1 1 2 1k
+R2 2 0 1k
+.op
+.end

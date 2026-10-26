@@ -1,0 +1,13 @@
+* Thevenin example: 12 V source, divider, series resistor, 4k load
+* Seen from node 3 with RL removed:
+*   Vth = 12 * 3k / (6k + 3k) = 4 V
+*   Rth = (6k || 3k) + 2k = 4k
+* With RL = 4k connected, V(3) = 4 * 4k / (4k + 4k) = 2 V and RL gets the maximum 1 mW.
+* expect: v(3) = 2
+* expect: p(RL) = 1m
+V1 1 0 12
+R1 1 2 6k
+R2 2 0 3k
+R3 2 3 2k
+RL 3 0 4k
+.op
